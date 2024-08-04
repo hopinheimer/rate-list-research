@@ -10,15 +10,13 @@ import (
 	"github.com/libp2p/go-libp2p"
 	kaddht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/host"
-	"github.com/libp2p/go-libp2p/core/network"
-	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/routing"
+	"github.com/libp2p/go-libp2p/core/crypto"
 	drouting "github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	dutil "github.com/libp2p/go-libp2p/p2p/discovery/util"
 	"github.com/libp2p/go-libp2p/p2p/muxer/yamux"
 	tls "github.com/libp2p/go-libp2p/p2p/security/tls"
 	"github.com/libp2p/go-libp2p/p2p/transport/tcp"
-	"github.com/multiformats/go-multiaddr"
 	"github.com/libp2p/go-libp2p/core/peerstore"
 )
 
@@ -35,7 +33,18 @@ func main() {
 	}
 	
 	// create a key pair for the peer's identity
-	priv, _, err := crypto.GenerateKeyPair(crypto.Ed25519, -1)
+	var priv crypto.PrivKey
+	var err error
+	// TODO: use a library to define CLI options
+	if (len(os.Args) > 1) {
+		priv, err = LoadIdentity(os.Args[1])
+	} else {
+		priv, _, err = crypto.GenerateKeyPair(crypto.Ed25519, -1)
+	}
+
+	if (err != nil) {
+		panic(err)
+	}
 
 	host, err := libp2p.New(
 		libp2p.Identity(priv),
@@ -47,16 +56,21 @@ func main() {
 		// TODO: ideally we should also include a peerstore that is loaded from the disk after a restart
 		// right now a empty peerstore is created on every restar
 	)
-	defer host.close()
+	defer host.Close()
 
 	if err != nil {
 		panic(err)
 	}
 
-	// connect to the chosen ipfs nodes
-	err = bootstrapConnect(ctx, host, BOOTSTRAP_PEERS)
-	if err != nil {
-		return nil, err
+	// connect to the bootstrap nodes if no identity file was provided
+	// an identity file is provided for nodes that need to have deterministic node ids
+	// currently these nodes are expected to be bootstrapped nodes
+	// TODO: use a different mechanism than the above
+	if (len(os.Args) < 2) {
+		err = bootstrapConnect(ctx, host, BOOTSTRAP_PEERS)
+		if err != nil {
+			panic(err)
+		}
 	}
 	
 	// just tell the DHT that you have bootstrapped

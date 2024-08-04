@@ -2,12 +2,9 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"sync"
 
 	"github.com/libp2p/go-libp2p/core/host"
@@ -59,7 +56,7 @@ func bootstrapConnect(ctx context.Context, ph host.Host, peers []peer.AddrInfo) 
 			defer log.Println(ctx, "bootstrapDial", ph.ID(), p.Addrs)
 			log.Printf("%s bootstrapping to %s", ph.ID(), p.Addrs)
 
-			// TODO: add addrs permanently
+			ph.Peerstore().AddAddrs(p.ID, p.Addrs, peerstore.PermanentAddrTTL) // connect adds the peers to peerstore but only temporarily hence we add it permanently
 			if err := ph.Connect(ctx, p); err != nil {
 				log.Println(ctx, "bootstrapDialFailed", p.Addrs)
 				log.Printf("failed to bootstrap with %v: %s", p.Addrs, err)
