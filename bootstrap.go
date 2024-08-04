@@ -17,11 +17,7 @@ import (
 // Source: https://github.com/libp2p/go-libp2p/blob/master/examples/routed-echo/bootstrap.go
 var (
 	BOOTSTRAP_PEERS = convertPeers([]string{
-		"/ip4/10.0.0.2/tcp/7878",
-		"/ip4/10.0.0.3/tcp/7878",
-		"/ip4/10.0.0.4/tcp/7878",
-		"/ip4/10.0.0.5/tcp/7878",
-		"/ip4/10.0.0.6/tcp/7878",
+		"/ip4/10.0.0.2/tcp/7878/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ",
 	})
 )
 
