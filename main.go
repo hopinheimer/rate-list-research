@@ -37,9 +37,6 @@ func main() {
 	flag.BoolVar(&create, "create", false, "create a new bootnode (wont have any affect if bootnode is not specified")
 	flag.Parse()
 
-	fmt.Println(bootnode)
-	fmt.Println(create)
-
 	var dht *kaddht.IpfsDHT
 	// define a function to create a DHT node because libp2p accepts only a routing constructor. Additionally, the function initializes a variable in the outer scope
 	createDHTNode := func(h host.Host) (routing.PeerRouting, error) {

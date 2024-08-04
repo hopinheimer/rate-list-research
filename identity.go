@@ -7,7 +7,7 @@ import (
 )
 
 func LoadIdentity(filename string) (crypto.PrivKey, error) {
-	privBytes, err := os.ReadFile("./identities" + filename + ".priv")
+	privBytes, err := os.ReadFile("./identities/" + filename + ".priv")
 	if err != nil {
 		return nil, err
 	}

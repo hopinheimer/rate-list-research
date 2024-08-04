@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  node_1:
+    image: ratedlist-node
+    command: --bootnode node1
+    networks:
+      my_network:
+        ipv4_address: 10.0.0.2
+  node_2:
+    image: ratedlist-node
+    networks:
+      my_network:
+        ipv4_address: 10.0.0.3
+  node_3:
+    image: ratedlist-node
+    networks:
+      my_network:
+        ipv4_address: 10.0.0.4
+  node_4:
+    image: ratedlist-node
+    networks:
+      my_network:
+        ipv4_address: 10.0.0.5
+  node_5:
+    image: ratedlist-node
+    networks:
+      my_network:
+        ipv4_address: 10.0.0.6
+  node_6:
+    image: ratedlist-node
+    networks:
+      my_network:
+        ipv4_address: 10.0.0.7
+
+networks:
+  my_network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.0.0.0/24
