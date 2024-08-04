@@ -59,6 +59,7 @@ func bootstrapConnect(ctx context.Context, ph host.Host, peers []peer.AddrInfo) 
 			defer log.Println(ctx, "bootstrapDial", ph.ID(), p.Addrs)
 			log.Printf("%s bootstrapping to %s", ph.ID(), p.Addrs)
 
+			// TODO: add addrs permanently
 			if err := ph.Connect(ctx, p); err != nil {
 				log.Println(ctx, "bootstrapDialFailed", p.Addrs)
 				log.Printf("failed to bootstrap with %v: %s", p.Addrs, err)

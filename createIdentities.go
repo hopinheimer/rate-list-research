@@ -2,21 +2,21 @@ package main
 
 import (
 	"os"
-	"io"
-	"bytes"
-	"log"
+	"fmt"
 	"encoding/json"
+	"io/ioutil"
+	"encoding/hex"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
 type KeyRing struct {
-  priv crypto.PrivKey
-  pub crypto.PubKey
-  id peer.ID
+	Priv string `json:"priv"`
+	Pub string `json:"pub"`
+	Id peer.ID `json:"id"` 
 }
 
-func main() {
+func createIdentities(filename string) {
 
 	// create a key pair for the peer's identity
 	priv, pub, err := crypto.GenerateKeyPair(crypto.Ed25519, -1)
@@ -24,44 +24,39 @@ func main() {
 		panic(err)
 	}
 
+	rawPrivKey, _ := priv.Raw()
+	rawPubKey, _ := pub.Raw()
+	rawPrivKeyString := hex.EncodeToString(rawPrivKey)
+	rawPubKeyString := hex.EncodeToString(rawPubKey)
+	
+	// fmt.Println(rawPrivKeyString)
+	// fmt.Println(rawPubKeyString)
+
 	// calculate the id from the pubkey
 	id, err := peer.IDFromPublicKey(pub)
 	if (err != nil) {
 		panic(err)
 	}
 
-	key_ring := &KeyRing{
-		priv: priv,
-		pub: pub,
-		id: id,
+	// fmt.Println(id)
+
+	key_ring := KeyRing{
+		Priv: rawPrivKeyString,
+		Pub: rawPubKeyString,
+		Id: id,
 	}
 
-	var Marshal = func(v interface{}) (io.Reader, error) {
-		b, err := json.MarshalIndent(v, "", "\t")
-		if err != nil {
-			return nil, err
-		}
-		
-		return bytes.NewReader(b), nil
+	file, err := json.Marshal(key_ring)
+	if (err != nil) {
+		panic(err)
 	}
 
-	var Save = func (path string, v interface{}) error {
-  		f, err := os.Create(path)
-  		if err != nil {
-    		return err
-  		}
-  		defer f.Close()
-  		
-		r, err := Marshal(v)
-  		if err != nil {
-    		return err
-  		}
-  
-		_, err = io.Copy(f, r)
-  		return err
-	}
+	_ = ioutil.WriteFile("./identities/" + filename + ".json", file, 0644)	
+}
 
-	if  err := Save("./identities/" + os.Args[1] + ".json", key_ring); err != nil {
-		log.Fatalln(err)
+func main() {
+	for _, name := range os.Args[1:] {
+		fmt.Println(name)
+		createIdentities(name)
 	}
 }
