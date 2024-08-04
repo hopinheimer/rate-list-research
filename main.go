@@ -40,18 +40,26 @@ func main() {
 	host, err := libp2p.New(
 		libp2p.Identity(priv),
 		libp2p.Transport(tcp.NewTCPTransport),
-		libp2p.ListenAddrStrings("/ip4/0.0.0.0/tcp/0"), // be reachable at all ipv4 address of the local machine on a random port
+		libp2p.ListenAddrStrings("/ip4/0.0.0.0/tcp/7878"), // be reachable at all ipv4 address of the local machine
 		libp2p.Muxer("/yamux/1.0.0", yamux.DefaultTransport), // streams will be created with the default transport (TCP)
 		libp2p.Security(tls.ID, tls.New),
-		libp2p.Routing(createDHTNode)
+		libp2p.Routing(createDHTNode),
+		// TODO: ideally we should also include a peerstore that is loaded from the disk after a restart
+		// right now a empty peerstore is created on every restar
 	)
 	defer host.close()
+
 	if err != nil {
 		panic(err)
 	}
 
-	// TODO: connect to bootstrap peers here
-
+	// connect to the chosen ipfs nodes
+	err = bootstrapConnect(ctx, host, BOOTSTRAP_PEERS)
+	if err != nil {
+		return nil, err
+	}
+	
+	// just tell the DHT that you have bootstrapped
 	err = dht.Bootstrap(ctx)
 	if err != nil {
 		panic(err)
@@ -70,8 +78,9 @@ func main() {
 	
 	// TODO: discover peers on trigger (whenever peer count is dropping)
 	for _, peer := range peers {
+		fmt.Println("Found peer with multiaddress: ", peer.Addrs)
 		// add the discovered peers to the DHT
-		ph.Peerstore().AddAddrs(peer.ID, peer.Addrs, peerstore.PermanentAddrTTL)
+		host.Peerstore().AddAddrs(peer.ID, peer.Addrs, peerstore.PermanentAddrTTL)
 	}
 	
 	stop := make(chan os.Signal, 1)
