@@ -7,6 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"flag"
+
 	"github.com/libp2p/go-libp2p"
 	kaddht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/host"
@@ -24,6 +26,14 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	var (
+		bootnode string
+		create bool
+	)
+
+	flag.StringVar(&bootnode, "bootnode", "", "bootnode file name")
+	flag.BoolVar(&create, "create", false, "create a new bootnode (wont have any affect if bootnode is not specified")
+	
 	var dht *kaddht.IpfsDHT
 	// define a function to create a DHT node because libp2p accepts only a routing constructor. Additionally, the function initializes a variable in the outer scope
 	createDHTNode := func(h host.Host) (routing.PeerRouting, error) {
@@ -36,8 +46,13 @@ func main() {
 	var priv crypto.PrivKey
 	var err error
 	// TODO: use a library to define CLI options
-	if (len(os.Args) > 1) {
-		priv, err = LoadIdentity(os.Args[1])
+	if bootnode != "" {
+		if create {
+			priv, _, err = crypto.GenerateKeyPair(crypto.Ed25519, -1)
+			err = StoreIdentity(priv, bootnode)
+		} else {
+			priv, err = LoadIdentity(bootnode)
+		}
 	} else {
 		priv, _, err = crypto.GenerateKeyPair(crypto.Ed25519, -1)
 	}
@@ -66,7 +81,7 @@ func main() {
 	// an identity file is provided for nodes that need to have deterministic node ids
 	// currently these nodes are expected to be bootstrapped nodes
 	// TODO: use a different mechanism than the above
-	if (len(os.Args) < 2) {
+	if bootnode != "" {
 		err = bootstrapConnect(ctx, host, BOOTSTRAP_PEERS)
 		if err != nil {
 			panic(err)
