@@ -11,5 +11,7 @@ RUN go build -o node
 
 EXPOSE 7878
 
+RUN chmod +x node
+
 # Run
 ENTRYPOINT ["./node"]
